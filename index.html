@@ -30,12 +30,17 @@
 
   <div id="rotate-hint" class="rotate-hint" hidden>Taşlar daha büyük görünsün diye telefonu yan çevirebilirsin ↻</div>
 
-  <!-- Açılış ekranı -->
-  <section id="splash" class="overlay splash" role="dialog" aria-label="MAHJIQ açılış">
-    <div class="panel">
-      <img class="splash-logo" src="assets/brand/mahjiq-logo-600.webp" alt="MAHJIQ" width="260" height="260" />
-      <p class="lead">Aynı iki taşı bul, dokun, kaldır.<br />Bütün taşları kaldırınca kazanırsın.</p>
-      <button id="btn-play" class="btn btn-gold btn-big" type="button">Oyna</button>
+  <!-- Açılış ekranı / ana menü -->
+  <section id="splash" class="overlay splash" role="dialog" aria-label="MAHJIQ ana menü">
+    <div class="menu">
+      <div class="logo-wrap">
+        <img class="splash-logo" src="assets/brand/mahjiq-logo-600.webp" alt="MAHJIQ" width="280" height="280" />
+      </div>
+      <div class="menu-text">
+        <p class="lead">Aynı iki taşı bul, dokun, kaldır.<br />Bütün taşları kaldırınca kazanırsın.</p>
+        <button id="btn-play" class="btn btn-gold btn-big" type="button">Oyna</button>
+        <p class="note">Ücretsiz · Reklamsız · İnternetsiz de çalışır</p>
+      </div>
     </div>
   </section>
 
@@ -54,7 +59,8 @@
   <!-- Kazanma -->
   <section id="win" class="overlay" role="dialog" aria-label="Kazandın" hidden>
     <div class="panel">
-      <h2 class="big">Tebrikler! 🎉</h2>
+      <img class="panel-logo" src="assets/brand/mahjiq-logo-160.png" alt="" width="84" height="84" />
+      <h2 class="big">Tebrikler!</h2>
       <p>Bütün taşları kaldırdın.</p>
       <button id="win-new" class="btn btn-gold btn-big" type="button">Yeni Oyun</button>
     </div>

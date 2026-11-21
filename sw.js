@@ -1,7 +1,7 @@
 // MAHJIQ — Service worker: oyunu çevrimdışı da açılabilir kılar.
 // Yeni sürüm yayınlanınca CACHE adı değiştirilmeli (eski önbellek silinir).
 
-const CACHE = 'mahjiq-v0.1.0';
+const CACHE = 'mahjiq-v0.2.0';
 const ASSETS = [
   './',
   './index.html',

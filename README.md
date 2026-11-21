@@ -16,12 +16,20 @@ Telefon, tablet ve tarayıcıda çalışır; ana ekrana eklenebilir (PWA) ve int
 
 ## Durum
 
-**Aşama 1 — Temel oyun** (geliştirme aşamasında)
+**Aşama 1 — Temel oyun** (tamamlandı, yayında)
 
 - Klasik 144 taşlık Kaplumbağa dizilimi
 - Standart taş dağılımı (bambu, daire, karakter, rüzgâr, ejderha, çiçek, mevsim)
 - Her dağıtım **çözülebilir**: üretici bir çözüm yolu bulur ve bu yolu oyun kurallarıyla baştan oynatarak doğrular
 - Yeni Oyun, Kalan Taş, Kullanılabilir Eşleşme sayısı, Kazanma ekranı, Hamle Kalmadı uyarısı
+
+**Aşama 2 — Görsel kalite** (önizlemede, onay bekliyor)
+
+- Seramik görünümlü taşlar (krem yüzey, yeşil taban, yumuşak ışık ve gölge)
+- Zümrüt yeşili keçe masa, ince altın çerçeve, kırmızı üst çubuk
+- MAHJIQ logolu açılış ekranı ve büyük Oyna düğmesi
+- Seçim, eşleşme ve kazanma animasyonları; "Hareketi Azalt" ayarına uyum
+- Taş boyutları ve dokunma alanları Aşama 1 ile birebir aynı (testle korunuyor)
 
 ## Proje yapısı
 
