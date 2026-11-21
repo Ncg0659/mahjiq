@@ -304,6 +304,7 @@ def run_stage2(browser):
         return {{ anim: cs.animationName, trans: cs.transitionDuration }}; }}""")
     check('Hareket azaltmada seçim animasyonu ve geçişler kapalı', rm['anim'] == 'none' and set(rm['trans'].replace(' ', '').split(',')) == {'0s'}, str(rm))
     check('Hareket azaltmada seçim vurgusu yine görünüyor', page.evaluate(f"document.querySelector('.tile[data-id=\"{a['id']}\"]').classList.contains('selected')"))
+    page.touchscreen.tap(a['x'], a['y'])  # seçimi kaldır: çözüm yolu temiz başlasın
     page.evaluate("""() => { const g = window.__mahjiq.game; for (const [a, b] of g.solution) { g.tap(a); g.tap(b); } }""")
     page.wait_for_selector('#win:not([hidden])', timeout=3000)
     page.wait_for_timeout(200)
