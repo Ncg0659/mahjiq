@@ -1,0 +1,231 @@
+/* MAHJIQ — Aşama 1 temel görünüm
+   Renk ailesi: kırmızı, yeşil, krem, altın (marka görselleriyle uyumlu) */
+
+:root {
+  --red: #b5121c;
+  --red-dark: #7d0b12;
+  --green: #137a3f;
+  --green-dark: #0b4a2a;
+  --felt: #0f5a33;
+  --felt-dark: #083d22;
+  --cream: #fff6df;
+  --cream-2: #f3e3bc;
+  --gold: #f2c04a;
+  --gold-dark: #b8861b;
+  --ink: #1d2b24;
+  --safe-t: env(safe-area-inset-top, 0px);
+  --safe-r: env(safe-area-inset-right, 0px);
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-l: env(safe-area-inset-left, 0px);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color: var(--cream);
+  background: radial-gradient(ellipse at 50% 40%, var(--felt) 0%, var(--felt-dark) 80%);
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* ---------- Üst çubuk ---------- */
+.topbar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: calc(6px + var(--safe-t)) calc(10px + var(--safe-r)) 6px calc(10px + var(--safe-l));
+  background: linear-gradient(180deg, var(--red) 0%, var(--red-dark) 100%);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+  z-index: 10;
+}
+.brand { width: 40px; height: 40px; border-radius: 9px; flex: 0 0 auto; }
+.stats { flex: 1 1 auto; display: flex; justify-content: center; gap: 18px; }
+.stat { display: flex; flex-direction: column; align-items: center; line-height: 1.1; }
+.stat-label { font-size: 12px; font-weight: 600; opacity: 0.9; }
+.stat-value { font-size: 22px; font-weight: 800; color: var(--gold); font-variant-numeric: tabular-nums; }
+
+/* ---------- Düğmeler ---------- */
+.btn {
+  font: inherit;
+  font-weight: 800;
+  font-size: 17px;
+  min-height: 44px;
+  padding: 8px 16px;
+  border-radius: 12px;
+  border: 0;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.btn-gold {
+  color: #4a2a00;
+  background: linear-gradient(180deg, #ffe08a 0%, var(--gold) 55%, var(--gold-dark) 100%);
+  box-shadow: 0 3px 0 #8a5f0c, 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+.btn-light {
+  color: var(--ink);
+  background: var(--cream);
+  box-shadow: 0 3px 0 #bfae86, 0 4px 10px rgba(0, 0, 0, 0.25);
+}
+.btn:active { transform: translateY(2px); }
+.btn-big { font-size: 22px; min-height: 56px; padding: 10px 36px; }
+
+/* ---------- Oyun alanı ---------- */
+.stage {
+  flex: 1 1 auto;
+  position: relative;
+  min-height: 0;
+  margin: 6px calc(6px + var(--safe-r)) calc(6px + var(--safe-b)) calc(6px + var(--safe-l));
+  touch-action: manipulation;
+}
+.board {
+  position: absolute;
+  /* Taşların z-index'leri yalnızca masanın içinde geçerli olsun;
+     pencereler (overlay) her zaman taşların üstünde kalsın. */
+  isolation: isolate;
+  z-index: 0;
+}
+
+/* ---------- Taşlar ---------- */
+.tile {
+  position: absolute;
+  width: var(--w);
+  height: var(--h);
+  border-radius: calc(var(--w) * 0.14);
+  background: linear-gradient(145deg, #fffdf4 0%, var(--cream) 45%, var(--cream-2) 100%);
+  /* 3B kenar: krem kalınlık + yeşil taban (marka ikonundaki gibi) + gölge */
+  box-shadow:
+    inset 0 0 0 1px rgba(120, 95, 50, 0.35),
+    calc(var(--s) * 0.5) calc(var(--s) * 0.5) 0 #e2cf9f,
+    var(--s) var(--s) 0 var(--green),
+    calc(var(--s) + 1px) calc(var(--s) + 1px) 0 var(--green-dark),
+    calc(var(--s) + 2px) calc(var(--s) + 3px) calc(var(--s) * 1.5) rgba(0, 0, 0, 0.45);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: transform 0.12s ease, opacity 0.25s ease;
+  outline: none;
+}
+.tile .face {
+  position: absolute;
+  inset: 4%;
+  pointer-events: none;
+}
+.tile .face svg { width: 100%; height: 100%; display: block; }
+
+/* Seçili taş: altın çerçeve + hafif yükselme */
+.tile.selected {
+  background: linear-gradient(145deg, #fff9d6 0%, #ffe9a0 100%);
+  box-shadow:
+    inset 0 0 0 calc(var(--w) * 0.07) var(--gold-dark),
+    calc(var(--s) * 0.5) calc(var(--s) * 0.5) 0 #e2cf9f,
+    var(--s) var(--s) 0 var(--green),
+    0 0 0 3px #fff2b0,
+    0 0 14px 4px rgba(255, 210, 80, 0.9);
+  transform: translate(calc(var(--s) * -0.5), calc(var(--s) * -0.5));
+}
+.tile:focus-visible { box-shadow: 0 0 0 3px #fff, 0 0 0 6px var(--gold-dark); }
+
+/* Eşleşip kaldırılan taş */
+.tile.gone {
+  opacity: 0;
+  transform: scale(0.6);
+  pointer-events: none;
+  visibility: hidden;
+  transition: transform 0.25s ease, opacity 0.25s ease, visibility 0s linear 0.25s;
+}
+
+/* Kapalı taşa dokunma: küçük sallanma */
+.tile.shake { animation: shake 0.35s ease; }
+@keyframes shake {
+  20% { transform: translateX(-3px); }
+  40% { transform: translateX(3px); }
+  60% { transform: translateX(-2px); }
+  80% { transform: translateX(2px); }
+}
+/* Yanlış eşleşme: kırmızı kısa parlama */
+.tile.wrong { animation: wrong 0.4s ease; }
+@keyframes wrong {
+  0%, 100% { filter: none; }
+  40% { filter: drop-shadow(0 0 6px #ff3b3b) saturate(1.4); }
+}
+
+/* ---------- Dikey ekran önerisi ---------- */
+.rotate-hint {
+  position: fixed;
+  left: 50%;
+  bottom: calc(10px + var(--safe-b));
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: calc(100vw - 24px);
+  padding: 8px 14px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.55);
+  pointer-events: none;
+  z-index: 20;
+}
+
+/* ---------- Pencereler ---------- */
+.overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: calc(16px + var(--safe-t)) calc(16px + var(--safe-r)) calc(16px + var(--safe-b)) calc(16px + var(--safe-l));
+  background: rgba(20, 5, 5, 0.6);
+  z-index: 100;
+}
+.overlay[hidden] { display: none; }
+.panel {
+  width: min(420px, 100%);
+  max-height: 100%;
+  overflow: auto;
+  text-align: center;
+  padding: 22px 20px;
+  border-radius: 20px;
+  color: var(--ink);
+  background: linear-gradient(180deg, #fffaf0 0%, var(--cream-2) 100%);
+  box-shadow: 0 0 0 4px var(--gold), 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+.panel h2 { margin: 0 0 8px; font-size: 24px; color: var(--red); }
+.panel h2.big { font-size: 32px; }
+.panel p { margin: 0 0 18px; font-size: 18px; line-height: 1.4; }
+.panel .row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+
+.splash { background: radial-gradient(ellipse at 50% 30%, #c8141e 0%, #6d0a10 90%); }
+.splash .panel { background: none; box-shadow: none; color: var(--cream); }
+.splash-logo { width: min(260px, 55vmin); height: auto; border-radius: 22%; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45); }
+.splash .lead { margin: 18px 0 22px; font-size: 19px; }
+
+/* Alçak (yatay telefon) ekranlarda üst çubuğu incelt */
+@media (max-height: 480px) {
+  .topbar { padding-top: calc(3px + var(--safe-t)); padding-bottom: 3px; }
+  .brand { width: 32px; height: 32px; }
+  .stat-value { font-size: 18px; }
+  .stat-label { font-size: 11px; }
+  .btn { min-height: 38px; font-size: 15px; padding: 6px 12px; }
+  .splash-logo { width: min(160px, 40vmin); }
+  .splash .lead { margin: 10px 0 12px; font-size: 16px; }
+  .btn-big { min-height: 48px; font-size: 19px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tile, .tile.gone { transition: none; }
+  .tile.shake, .tile.wrong { animation: none; }
+}

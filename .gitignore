@@ -1,0 +1,17 @@
+# Bağımlılıklar ve önbellek
+node_modules/
+__pycache__/
+*.pyc
+
+# Test çıktıları (ekran görüntüleri her çalıştırmada yeniden üretilir)
+tests/ui/screens/
+
+# Sistem dosyaları
+.DS_Store
+Thumbs.db
+
+# Ortam / gizli bilgiler — depoya asla girmez
+.env
+.env.*
+*.pem
+*.key

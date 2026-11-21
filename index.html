@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <title>MAHJIQ</title>
+  <meta name="description" content="MAHJIQ — ücretsiz, reklamsız Mahjong Solitaire." />
+  <meta name="theme-color" content="#a3101a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="MAHJIQ" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/icon-32.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <img class="brand" src="assets/brand/mahjiq-logo-160.png" alt="MAHJIQ" width="40" height="40" />
+    <div class="stats" aria-live="polite">
+      <div class="stat"><span class="stat-label">Kalan Taş</span><span id="stat-remaining" class="stat-value">144</span></div>
+      <div class="stat"><span class="stat-label">Eşleşme</span><span id="stat-matches" class="stat-value">0</span></div>
+    </div>
+    <button id="btn-new" class="btn btn-gold" type="button">Yeni Oyun</button>
+  </header>
+
+  <main id="stage" class="stage"></main>
+
+  <div id="rotate-hint" class="rotate-hint" hidden>Taşlar daha büyük görünsün diye telefonu yan çevirebilirsin ↻</div>
+
+  <!-- Açılış ekranı -->
+  <section id="splash" class="overlay splash" role="dialog" aria-label="MAHJIQ açılış">
+    <div class="panel">
+      <img class="splash-logo" src="assets/brand/mahjiq-logo-600.webp" alt="MAHJIQ" width="260" height="260" />
+      <p class="lead">Aynı iki taşı bul, dokun, kaldır.<br />Bütün taşları kaldırınca kazanırsın.</p>
+      <button id="btn-play" class="btn btn-gold btn-big" type="button">Oyna</button>
+    </div>
+  </section>
+
+  <!-- Yeni oyun onayı -->
+  <section id="confirm-new" class="overlay" role="dialog" aria-label="Yeni oyun" hidden>
+    <div class="panel">
+      <h2>Yeni oyun başlasın mı?</h2>
+      <p>Bu oyun silinecek.</p>
+      <div class="row">
+        <button id="confirm-no" class="btn btn-light" type="button">Vazgeç</button>
+        <button id="confirm-yes" class="btn btn-gold" type="button">Evet, Yeni Oyun</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Kazanma -->
+  <section id="win" class="overlay" role="dialog" aria-label="Kazandın" hidden>
+    <div class="panel">
+      <h2 class="big">Tebrikler! 🎉</h2>
+      <p>Bütün taşları kaldırdın.</p>
+      <button id="win-new" class="btn btn-gold btn-big" type="button">Yeni Oyun</button>
+    </div>
+  </section>
+
+  <!-- Hamle kalmadı -->
+  <section id="stuck" class="overlay" role="dialog" aria-label="Hamle kalmadı" hidden>
+    <div class="panel">
+      <h2>Hamle kalmadı</h2>
+      <p>Masada eşleştirilebilecek taş kalmadı.<br />Kalan taş: <strong id="stuck-left">0</strong></p>
+      <div class="row">
+        <button id="stuck-look" class="btn btn-light" type="button">Masaya Bak</button>
+        <button id="stuck-new" class="btn btn-gold" type="button">Yeni Oyun</button>
+      </div>
+    </div>
+  </section>
+
+  <noscript>MAHJIQ için JavaScript açık olmalı.</noscript>
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>
