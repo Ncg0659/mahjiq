@@ -202,6 +202,7 @@ def run():
 
         run_stage2(browser)
         run_walnut(browser)
+        run_stage21(browser)
         browser.close()
 
     failed = [r for r in results if not r[1]]
@@ -388,6 +389,61 @@ def run_walnut(browser):
         check(f'{name}: taşlar başlığın üstüne binmiyor ve panel ekranda', r['clear'] and r['inView'], str(r))
         c.close()
     ctx.close()
+
+
+def run_stage21(browser):
+    """Aşama 2.1 rötuşları: menü boşluğu, oyun ekranı logosu, kazanma taşları."""
+    print('\nAşama 2.1 — Rötuşlar')
+    for name, w, h, logo in [('iPhone yatay', 852, 393, 38), ('iPad yatay', 1180, 820, 50), ('Android yatay', 915, 412, 38), ('iPhone dikey', 393, 852, 42)]:
+        c = browser.new_context(viewport={'width': w, 'height': h}, device_scale_factor=2, has_touch=True, is_mobile=True)
+        pg = c.new_page()
+        pg.goto(URL)
+        pg.wait_for_function("document.querySelector('.splash-logo').complete")
+        pg.wait_for_timeout(800)  # logonun 0,6 sn'lik açılış animasyonu bitsin
+        m = pg.evaluate("""() => { const R = s => document.querySelector(s).getBoundingClientRect();
+            const l = R('.splash-logo'), p = R('#btn-play'), i = R('#btn-info');
+            return { logoPlay: p.top - l.bottom, playInfo: i.top - p.bottom,
+                     centered: Math.abs((l.left + l.right) / 2 - innerWidth / 2) < 2 && Math.abs((p.left + p.right) / 2 - innerWidth / 2) < 2 }; }""")
+        check(f'{name}: menüde logo ile Oyna arası daraldı (≤ 14 px), Oyna–Nasıl Oynanır? arası korundu, ortalı',
+              0 <= m['logoPlay'] <= 14 and m['playInfo'] >= 12 and m['centered'], str({k: round(v) if isinstance(v, float) else v for k, v in m.items()}))
+        pg.tap('#btn-play')
+        g = pg.evaluate("""() => { const R = s => document.querySelector(s).getBoundingClientRect();
+            const b = R('.brand'), st = R('.stat'), tb = R('.topbar');
+            const tiles = [...document.querySelectorAll('.tile')].map(e => e.getBoundingClientRect());
+            const over = (a, c) => !(a.right <= c.left || c.right <= a.left || a.bottom <= c.top || c.bottom <= a.top);
+            return { size: Math.round(b.width), ratio: b.width / b.height, top: b.top, left: b.left, gapToStat: st.left - b.right,
+                     bottomInBar: b.bottom <= tb.bottom + 0.5, hitsTile: tiles.some(t => over(b, t)) }; }""")
+        check(f'{name}: oyun ekranı logosu {logo} px, oranı korunmuş, kenarlardan boşluklu',
+              g['size'] == logo and abs(g['ratio'] - 1) < 0.01 and g['top'] >= 6 and g['left'] >= 10, str(g))
+        check(f'{name}: logo sayaçlarla ve taşlarla çakışmıyor, üst çubuk dışına taşmıyor',
+              g['gapToStat'] >= 8 and g['bottomInBar'] and not g['hitsTile'], str(g))
+        c.close()
+
+    for name, w, h in [('iPhone yatay', 852, 393), ('iPad yatay', 1180, 820)]:
+        c = browser.new_context(viewport={'width': w, 'height': h}, device_scale_factor=2, has_touch=True, is_mobile=True, reduced_motion='reduce')
+        pg = c.new_page()
+        pg.goto(URL)
+        pg.tap('#btn-play')
+        pg.evaluate("""() => { const g = window.__mahjiq.game; for (const [a, b] of g.solution) { g.tap(a); g.tap(b); } }""")
+        pg.wait_for_selector('#win:not([hidden])', timeout=3000)
+        r = pg.evaluate("""() => {
+            const p = document.querySelector('#win .panel').getBoundingClientRect();
+            const ts = [...document.querySelectorAll('.win-tiles .deco-tile')];
+            const rs = ts.map(e => e.getBoundingClientRect());
+            const shadow = getComputedStyle(document.querySelector('.win-tiles'), '::before');
+            const z = ts.map(e => +getComputedStyle(e).zIndex);
+            return { onEdge: rs.every(t => t.top < p.top && t.bottom > p.top),
+                     overlap: rs[0].right > rs[1].left && rs[2].left < rs[1].right,
+                     centerOnTop: z[1] > z[0] && z[1] > z[2],
+                     contactShadow: shadow.content !== 'none' && shadow.backgroundImage.includes('radial-gradient') };
+        }""")
+        check(f'{name}: kazanma taşları panelin üst kenarına oturuyor, ortadaki üstte, temas gölgesi var',
+              r['onEdge'] and r['overlap'] and r['centerOnTop'] and r['contactShadow'], str(r))
+        pg.tap('#win-new')
+        pg.wait_for_timeout(100)
+        check(f'{name}: kazanma ekranındaki Yeni Oyun düğmesi çalışıyor',
+              pg.is_hidden('#win') and pg.evaluate('window.__mahjiq.game.remaining') == 144)
+        c.close()
 
 
 if __name__ == '__main__':

@@ -83,11 +83,18 @@ body {
   z-index: 10;
 }
 .brand {
-  width: 42px;
-  height: 42px;
-  border-radius: 10px;
+  /* Aşama 2.1: 42 → 50 px (%19). Negatif alt boşluk sayesinde üst çubuğun yüksekliği
+     (ve dolayısıyla taş boyutları) değişmez; logo çubuğun alt payına doğru uzanır. */
+  width: 50px;
+  height: 50px;
+  margin-bottom: -6px;
+  border-radius: 12px;
   flex: 0 0 auto;
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.45);
+}
+/* Dar (dikey telefon) ekranlarda sayaçlara yer kalsın: önceki boyut korunur */
+@media (max-width: 480px) {
+  .brand { width: 42px; height: 42px; margin-bottom: 0; border-radius: 10px; }
 }
 .stats { flex: 1 1 auto; display: flex; justify-content: center; gap: 10px; }
 /* Sayaçlar: koyu ahşap plaka */
@@ -376,9 +383,13 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: clamp(12px, 3.2vh, 28px);
+  gap: 0;
   padding: calc(12px + var(--safe-t)) 16px calc(12px + var(--safe-b));
 }
+/* Aşama 2.1: logo ile Oyna arasındaki boşluk azaltıldı (önceden 12–28 px);
+   Oyna ile Nasıl Oynanır? arasındaki boşluk aynı kaldı. */
+.splash .menu .splash-logo { margin-bottom: clamp(6px, 1.6vh, 14px); }
+.splash .menu .btn-info { margin-top: clamp(12px, 3.2vh, 28px); }
 .splash-logo {
   width: min(300px, 56vmin, 44vh);
   height: auto;
@@ -395,13 +406,13 @@ body {
   --wt-h: calc(var(--wt-w) * 1.3);
   width: min(440px, calc(100% - 32px));
   margin-top: calc(var(--wt-h) * 0.5);
-  padding-top: calc(var(--wt-h) * 0.62 + 12px);
+  padding-top: calc(var(--wt-h) * 0.72 + 12px);
   overflow: visible;
 }
 .win-tiles {
   position: absolute;
   left: 50%;
-  top: calc(var(--wt-h) * -0.55);
+  top: calc(var(--wt-h) * -0.6);
   width: calc(var(--wt-w) * 3);
   height: var(--wt-h);
   transform: translateX(-50%);
@@ -409,9 +420,39 @@ body {
   --h: var(--wt-h);
   --s: calc(var(--wt-w) * 0.11);
 }
-.win-tiles .w1 { left: calc(var(--w) * 0.12); top: calc(var(--h) * 0.08); transform: rotate(-10deg); }
-.win-tiles .w2 { left: calc(var(--w) * 1); top: 0; z-index: 2; }
-.win-tiles .w3 { left: calc(var(--w) * 1.88); top: calc(var(--h) * 0.08); transform: rotate(10deg); }
+/* Aşama 2.1: yan taşlar ortadakinin altına biraz daha girer, daha az eğik ve daha alçak durur;
+   panelin üst kenarına oturur. Işık sol üstten: gölgeler sağ alta düşer. */
+.win-tiles .deco-tile { z-index: 1; }
+.win-tiles .w1 { left: calc(var(--w) * 0.22); top: calc(var(--h) * 0.13); transform: rotate(-7deg); }
+.win-tiles .w2 { left: calc(var(--w) * 1); top: 0; z-index: 3; }
+.win-tiles .w3 { left: calc(var(--w) * 1.78); top: calc(var(--h) * 0.13); transform: rotate(7deg); }
+/* Ortadaki taşın yan taşların üzerine düşen yumuşak gölgesi */
+.win-tiles .w2 {
+  box-shadow:
+    inset 1.5px 1.5px 0 rgba(255, 255, 255, 0.95),
+    inset -1.5px -1.5px 0 rgba(160, 120, 65, 0.3),
+    inset 0 0 0 1px rgba(120, 88, 40, 0.22),
+    calc(var(--s) * 0.3) calc(var(--s) * 0.3) 0 #f1e3c1,
+    calc(var(--s) * 0.55) calc(var(--s) * 0.55) 0 #dcc796,
+    calc(var(--s) * 0.78) calc(var(--s) * 0.78) 0 var(--tile-green),
+    var(--s) var(--s) 0 #106a48,
+    calc(var(--s) + 1px) calc(var(--s) + 1px) 0 var(--tile-green-dark),
+    calc(var(--s) + 4px) calc(var(--s) + 3px) calc(var(--s) * 1.6) rgba(40, 18, 5, 0.38),
+    -2px calc(var(--s) + 2px) calc(var(--s) * 1.4) rgba(40, 18, 5, 0.22);
+}
+/* Panele temas gölgesi: taşların oturduğu yerde yumuşak, sağa kaymış bir gölge */
+.win-tiles::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  left: 8%;
+  width: 92%;
+  bottom: calc(var(--h) * -0.22);
+  height: calc(var(--h) * 0.34);
+  border-radius: 50%;
+  background: radial-gradient(ellipse 50% 50% at 54% 45%, rgba(70, 35, 10, 0.32) 0%, rgba(70, 35, 10, 0.14) 55%, rgba(70, 35, 10, 0) 100%);
+  filter: blur(2px);
+}
 .win-title { font-family: var(--serif); font-size: 46px; line-height: 1.05; margin: 6px 0 8px; color: var(--red); }
 .panel-win p { font-size: 19px; color: var(--ink); }
 .panel-win .btn-big { min-width: 240px; }
@@ -442,7 +483,7 @@ body {
 /* ---------- Alçak (yatay telefon) ekranlar ---------- */
 @media (max-height: 480px) {
   .topbar { padding-top: calc(3px + var(--safe-t)); padding-bottom: 3px; }
-  .brand { width: 32px; height: 32px; border-radius: 8px; }
+  .brand { width: 38px; height: 38px; margin-bottom: -6px; border-radius: 9px; }
   .stat { min-width: 76px; padding: 2px 10px 3px; }
   .stat-value { font-size: 18px; }
   .stat-label { font-size: 11px; }
