@@ -201,6 +201,7 @@ def run():
         ctx.close()
 
         run_stage2(browser)
+        run_walnut(browser)
         browser.close()
 
     failed = [r for r in results if not r[1]]
@@ -285,7 +286,7 @@ def run_stage2(browser):
     conf = page.evaluate("""() => { const c = document.querySelector('#win .confetti');
         const p = document.querySelector('#win .panel');
         return { pieces: c ? c.children.length : 0, behindPanel: c ? (+getComputedStyle(c).zIndex < +getComputedStyle(p).zIndex) : false,
-                 btn: document.elementFromPoint(...(r => [r.left + r.width / 2, r.top + r.height / 2])(document.querySelector('#win-new').getBoundingClientRect())).id }; }""")
+                 btn: document.elementFromPoint(...(r => [r.left + r.width / 2, r.top + r.height / 2])(document.querySelector('#win-new').getBoundingClientRect())).closest('button')?.id }; }""")
     check('Kazanınca sade konfeti kutlaması var, panelin arkasında kalıyor', conf['pieces'] > 0 and conf['behindPanel'], str(conf))
     check('Kutlama sırasında Yeni Oyun düğmesine dokunulabiliyor', conf['btn'] == 'win-new')
     page.wait_for_timeout(3700)
@@ -310,6 +311,82 @@ def run_stage2(browser):
     page.wait_for_timeout(200)
     check('Hareket azaltmada konfeti ve altın halka oluşturulmuyor',
           page.evaluate("document.querySelectorAll('.confetti, .spark').length") == 0 and page.is_visible('#win'))
+    ctx.close()
+
+
+def run_walnut(browser):
+    """Aşama 2 revizyonu: Koyu Ceviz Masa — arka planlar, Bilgi penceresi, kazanma paneli."""
+    print('\nAşama 2 (Ceviz) — Arka plan görselleri ve çevrimdışı önbellek')
+    ctx = browser.new_context(viewport={'width': 852, 'height': 393}, device_scale_factor=2, has_touch=True, is_mobile=True)
+    page = ctx.new_page()
+    page.goto(URL)
+    info = page.evaluate("""async () => {
+        const out = {};
+        for (const n of ['menu', 'game', 'victory']) {
+            const el = document.querySelector('.bg-' + n);
+            const m = getComputedStyle(el).backgroundImage.match(/url\\("?([^")]+)"?\\)/);
+            const url = m ? m[1] : null;
+            let ok = false;
+            if (url) { const r = await fetch(url); ok = r.ok && (r.headers.get('content-type') || '').includes('image'); }
+            out[n] = { url: url && url.split('/').pop(), ok };
+        }
+        const sw = await fetch('sw.js').then(r => r.text());
+        out.inSw = ['menu', 'game', 'victory'].every(n => sw.includes(`assets/bg/mahjiq-bg-${n}.webp`));
+        return out; }""")
+    for n in ['menu', 'game', 'victory']:
+        check(f'{n} arka planı ayrı görsel dosyası olarak yükleniyor', info[n]['ok'] and info[n]['url'] == f'mahjiq-bg-{n}.webp', str(info[n]))
+    check('Üç arka plan da çevrimdışı önbellek listesinde', info['inSw'])
+
+    print('\nAşama 2 (Ceviz) — Ana menü ve Nasıl Oynanır?')
+    for name, w, h in [('iPhone yatay', 852, 393), ('iPad yatay', 1180, 820), ('iPad dikey', 820, 1180), ('iPhone dikey', 393, 852)]:
+        c = browser.new_context(viewport={'width': w, 'height': h}, device_scale_factor=2, has_touch=True, is_mobile=True)
+        pg = c.new_page()
+        pg.goto(URL)
+        pg.wait_for_function("document.querySelector('.splash-logo').complete")
+        r = pg.evaluate("""() => {
+            const R = s => document.querySelector(s).getBoundingClientRect();
+            const inView = b => b.left >= 0 && b.top >= 0 && b.right <= innerWidth && b.bottom <= innerHeight;
+            const over = (a, b) => !(a.right <= b.left || b.right <= a.left || a.bottom <= b.top || b.bottom <= a.top);
+            const logo = R('.splash-logo'), play = R('#btn-play'), info = R('#btn-info');
+            return { allIn: [logo, play, info].every(inView), noOverlap: !over(logo, play) && !over(play, info),
+                     infoH: info.height, settings: !!document.querySelector('[aria-label*="Ayar"], #btn-settings') };
+        }""")
+        check(f'{name}: logo, Oyna ve Nasıl Oynanır? ekranda, birbirinin üstüne binmiyor',
+              r['allIn'] and r['noOverlap'] and r['infoH'] >= 40, str(r))
+        check(f'{name}: işlevsiz Ayarlar düğmesi yok', not r['settings'])
+        c.close()
+    page.tap('#btn-info')
+    page.wait_for_timeout(100)
+    txt = page.text_content('#info')
+    check('Nasıl Oynanır? penceresi açılıyor, kurallar Türkçe',
+          page.is_visible('#info') and 'Nasıl Oynanır?' in txt and 'sağ ya da sol yanı boşsa' in txt)
+    page.tap('#info-close')
+    page.wait_for_timeout(100)
+    check('Tamam ile pencere kapanıyor, menü yerinde', page.is_hidden('#info') and page.is_visible('#splash'))
+
+    print('\nAşama 2 (Ceviz) — Kazanma ekranı')
+    for name, w, h in [('iPhone yatay', 852, 393), ('iPad yatay', 1180, 820), ('iPhone dikey', 393, 852)]:
+        c = browser.new_context(viewport={'width': w, 'height': h}, device_scale_factor=2, has_touch=True, is_mobile=True,
+                                reduced_motion='reduce')
+        pg = c.new_page()
+        pg.goto(URL)
+        pg.tap('#btn-play')
+        pg.evaluate("""() => { const g = window.__mahjiq.game; for (const [a, b] of g.solution) { g.tap(a); g.tap(b); } }""")
+        pg.wait_for_selector('#win:not([hidden])', timeout=3000)
+        r = pg.evaluate("""() => {
+            const p = document.querySelector('#win .panel');
+            const tiles = [...p.querySelectorAll('.win-tiles .deco-tile')].map(e => e.getBoundingClientRect());
+            const title = p.querySelector('.win-title').getBoundingClientRect();
+            const all = [...tiles, title, p.getBoundingClientRect(), document.querySelector('#win-new').getBoundingClientRect()];
+            return { tiles: tiles.length, title: p.querySelector('.win-title').textContent.trim(),
+                     msg: p.querySelector('p').textContent.trim(), buttons: p.querySelectorAll('button').length,
+                     clear: Math.max(...tiles.map(t => t.bottom)) <= title.top + 2,
+                     inView: all.every(b => b.top >= 0 && b.bottom <= innerHeight && b.left >= 0 && b.right <= innerWidth) };
+        }""")
+        check(f'{name}: panelde üç taş, Tebrikler! ve mesaj; tek düğme (Yeni Oyun)',
+              r['tiles'] == 3 and r['title'] == 'Tebrikler!' and r['msg'] == 'Bütün taşları kaldırdın.' and r['buttons'] == 1, str(r))
+        check(f'{name}: taşlar başlığın üstüne binmiyor ve panel ekranda', r['clear'] and r['inView'], str(r))
+        c.close()
     ctx.close()
 
 

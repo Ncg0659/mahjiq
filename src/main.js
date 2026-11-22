@@ -2,6 +2,7 @@
 
 import { Game, STATUS } from './engine/game.js';
 import { BoardView } from './ui/boardView.js';
+import { faceSVG } from './ui/faces.js';
 
 const $ = (sel) => document.querySelector(sel);
 
@@ -17,7 +18,17 @@ const ui = {
   stuck: $('#stuck'),
   stuckLeft: $('#stuck-left'),
   rotateHint: $('#rotate-hint'),
+  info: $('#info'),
 };
+
+/** Süs taşı: oyunun kendi taş çizimiyle (dokunulmaz, ekran okuyucu görmez). */
+function decoTile(kind, value, cls = '') {
+  return `<div class="deco-tile ${cls}"><div class="face">${faceSVG({ kind, value })}</div></div>`;
+}
+
+// Kazanma panelinin üstündeki üç taş
+document.querySelector('.win-tiles').innerHTML =
+  decoTile('dots', 5, 'w1') + decoTile('dragon', 'green', 'w2') + decoTile('bamboo', 2, 'w3');
 
 function show(el) {
   el.hidden = false;
@@ -49,12 +60,13 @@ const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 /** Kazanınca sade konfeti kutlaması (yalnızca transform/opacity; hareket azaltmada yok). */
 function celebrate() {
   if (reduceMotion.matches) return;
-  const colors = ['#f2c04a', '#ffe49a', '#c8141e', '#148a4a', '#fff7e2'];
+  // Yalnızca hafif altın tonları (brief: sade altın konfeti)
+  const colors = ['#d4af37', '#f2d57a', '#b8892a', '#fbe7a8'];
   const box = document.createElement('div');
   box.className = 'confetti';
   box.setAttribute('aria-hidden', 'true');
   let html = '';
-  for (let i = 0; i < 42; i++) {
+  for (let i = 0; i < 30; i++) {
     const left = Math.random() * 100;
     const dx = (Math.random() - 0.5) * 160;
     const rot = 360 + Math.random() * 540;
@@ -102,6 +114,11 @@ $('#confirm-no').addEventListener('click', () => hide(ui.confirm));
 $('#win-new').addEventListener('click', startNewGame);
 $('#stuck-new').addEventListener('click', startNewGame);
 $('#stuck-look').addEventListener('click', () => hide(ui.stuck));
+$('#btn-info').addEventListener('click', () => show(ui.info));
+$('#info-close').addEventListener('click', () => {
+  hide(ui.info);
+  $('#btn-info').focus({ preventScroll: true });
+});
 
 // Küçük dikey ekranda "yan çevir" önerisi
 $('#stage').addEventListener('board-layout', (e) => {
