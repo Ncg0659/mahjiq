@@ -1,22 +1,32 @@
-/* MAHJIQ — Aşama 1 temel görünüm
-   Renk ailesi: kırmızı, yeşil, krem, altın (marka görselleriyle uyumlu) */
+/* MAHJIQ — Aşama 2 (revizyon): Koyu Ceviz Masa
+   Renkler: koyu kahve #4B2E1F / #2A1B12, krem #F8E7CB, kırmızı #9E1B1F, yeşil #0E5A44, altın #D4AF37.
+   Önemli: taşların boyutu ve konumu boardView.js'te hesaplanır; bu dosya yalnızca görünümü değiştirir.
+   Üst çubuğun yüksekliği ve masa boşlukları Aşama 1 ile aynı tutulur (taş boyutları değişmesin).
+   Arka plan görselleri yalnızca ahşap masa fotoğrafıdır; logo, düğme, sayaç ve taşlar HTML/CSS
+   katmanlarıdır. Görsel yüklenemezse altındaki ceviz rengi degrade görünür. */
 
 :root {
-  --red: #b5121c;
-  --red-dark: #7d0b12;
-  --green: #137a3f;
-  --green-dark: #0b4a2a;
-  --felt: #0f5a33;
-  --felt-dark: #083d22;
-  --cream: #fff6df;
-  --cream-2: #f3e3bc;
-  --gold: #f2c04a;
-  --gold-dark: #b8861b;
-  --ink: #1d2b24;
+  --walnut: #4b2e1f;
+  --walnut-dark: #2a1b12;
+  --cream: #f8e7cb;
+  --cream-light: #fffaf0;
+  --cream-dark: #e6cfa3;
+  --red: #9e1b1f;
+  --red-light: #c8262e;
+  --tile-green: #17845a;
+  --tile-green-dark: #0b4a35;
+  --gold: #d4af37;
+  --gold-light: #f2d57a;
+  --ink: #3a2417;
+  --serif: Georgia, "Times New Roman", serif;
   --safe-t: env(safe-area-inset-top, 0px);
   --safe-r: env(safe-area-inset-right, 0px);
   --safe-b: env(safe-area-inset-bottom, 0px);
   --safe-l: env(safe-area-inset-left, 0px);
+  /* Görsel yüklenmezse görünen yedek: ceviz rengi + sol üstten sıcak ışık */
+  --walnut-fallback:
+    radial-gradient(ellipse 70% 60% at 12% 0%, rgba(255, 190, 115, 0.35) 0%, rgba(255, 170, 90, 0) 70%),
+    linear-gradient(172deg, #6a412a 0%, #4b2e1f 40%, #2a1810 100%);
 }
 
 * { box-sizing: border-box; }
@@ -34,29 +44,81 @@ body {
   height: 100dvh;
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   color: var(--cream);
-  background: radial-gradient(ellipse at 50% 40%, var(--felt) 0%, var(--felt-dark) 80%);
+  background: var(--walnut-dark);
   -webkit-tap-highlight-color: transparent;
   -webkit-user-select: none;
   user-select: none;
   -webkit-touch-callout: none;
 }
 
-/* ---------- Üst çubuk ---------- */
+/* ---------- Arka planlar (ekranı doldurur, oranı korur, ortadan kırpar) ---------- */
+.bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-color: var(--walnut);
+  background-repeat: no-repeat;
+  background-size: cover, cover, cover;
+  background-position: center, center, center;
+}
+.bg-game {
+  position: fixed;
+  background-image: url("../assets/bg/mahjiq-bg-game.webp"), var(--walnut-fallback);
+  /* Işık huzmeleri sol üstte: dar ekranda da görünsün diye sola yaslı */
+  background-position: left center, center, center;
+}
+.bg-menu { background-image: url("../assets/bg/mahjiq-bg-menu.webp"), var(--walnut-fallback); }
+.bg-victory { background-image: url("../assets/bg/mahjiq-bg-victory.webp"), var(--walnut-fallback); }
+
+/* ---------- Üst çubuk (masanın üstünde, ayrı bir şerit değil) ---------- */
 .topbar {
+  position: relative;
   flex: 0 0 auto;
   display: flex;
   align-items: center;
   gap: 10px;
   padding: calc(6px + var(--safe-t)) calc(10px + var(--safe-r)) 6px calc(10px + var(--safe-l));
-  background: linear-gradient(180deg, var(--red) 0%, var(--red-dark) 100%);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+  background: linear-gradient(180deg, rgba(20, 9, 4, 0.5) 0%, rgba(20, 9, 4, 0) 100%);
   z-index: 10;
 }
-.brand { width: 40px; height: 40px; border-radius: 9px; flex: 0 0 auto; }
-.stats { flex: 1 1 auto; display: flex; justify-content: center; gap: 18px; }
-.stat { display: flex; flex-direction: column; align-items: center; line-height: 1.1; }
-.stat-label { font-size: 12px; font-weight: 600; opacity: 0.9; }
-.stat-value { font-size: 22px; font-weight: 800; color: var(--gold); font-variant-numeric: tabular-nums; }
+.brand {
+  /* Aşama 2.1: 42 → 50 px (%19). Negatif alt boşluk sayesinde üst çubuğun yüksekliği
+     (ve dolayısıyla taş boyutları) değişmez; logo çubuğun alt payına doğru uzanır. */
+  width: 50px;
+  height: 50px;
+  margin-bottom: -6px;
+  border-radius: 12px;
+  flex: 0 0 auto;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.45);
+}
+/* Dar (dikey telefon) ekranlarda sayaçlara yer kalsın: önceki boyut korunur */
+@media (max-width: 480px) {
+  .brand { width: 42px; height: 42px; margin-bottom: 0; border-radius: 10px; }
+}
+.stats { flex: 1 1 auto; display: flex; justify-content: center; gap: 10px; }
+/* Sayaçlar: koyu ahşap plaka */
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 92px;
+  padding: 3px 14px 4px;
+  line-height: 1.1;
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(61, 37, 23, 0.92) 0%, rgba(36, 21, 12, 0.95) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 225, 180, 0.22),
+    inset 0 0 0 1px rgba(255, 220, 170, 0.14),
+    0 3px 0 #140a05,
+    0 6px 12px rgba(0, 0, 0, 0.4);
+}
+.stat-label { font-size: 12px; font-weight: 700; color: var(--cream); }
+.stat-value { font-size: 22px; font-weight: 800; color: #eac25a; font-variant-numeric: tabular-nums; text-shadow: 0 1px 0 rgba(0, 0, 0, 0.5); }
+.stat-value.bump { animation: bump 0.35s ease; }
+@keyframes bump {
+  40% { transform: scale(1.18); color: var(--gold-light); }
+}
 
 /* ---------- Düğmeler ---------- */
 .btn {
@@ -65,86 +127,171 @@ body {
   font-size: 17px;
   min-height: 44px;
   padding: 8px 16px;
-  border-radius: 12px;
+  border-radius: 14px;
   border: 0;
   cursor: pointer;
   touch-action: manipulation;
+  transition: transform 0.08s ease, filter 0.15s ease;
 }
-.btn-gold {
-  color: #4a2a00;
-  background: linear-gradient(180deg, #ffe08a 0%, var(--gold) 55%, var(--gold-dark) 100%);
-  box-shadow: 0 3px 0 #8a5f0c, 0 4px 10px rgba(0, 0, 0, 0.3);
+.btn-icon-text { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.btn .ico { width: 1.15em; height: 1.15em; flex: 0 0 auto; }
+/* Kırmızı, üç boyutlu ana düğme */
+.btn-red {
+  color: #fff3dc;
+  background: linear-gradient(180deg, #d0353a 0%, var(--red-light) 18%, var(--red) 62%, #821519 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 210, 190, 0.6),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.18),
+    0 4px 0 #5a0c0f,
+    0 8px 16px rgba(0, 0, 0, 0.4);
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.3);
 }
-.btn-light {
-  color: var(--ink);
-  background: var(--cream);
-  box-shadow: 0 3px 0 #bfae86, 0 4px 10px rgba(0, 0, 0, 0.25);
+/* Krem, sade ikincil düğme */
+.btn-cream {
+  color: var(--walnut);
+  background: linear-gradient(180deg, var(--cream-light) 0%, var(--cream) 60%, var(--cream-dark) 100%);
+  box-shadow:
+    inset 0 1px 0 #fff,
+    0 3px 0 #a88a5c,
+    0 7px 14px rgba(0, 0, 0, 0.35);
 }
-.btn:active { transform: translateY(2px); }
-.btn-big { font-size: 22px; min-height: 56px; padding: 10px 36px; }
+.btn:active { transform: translateY(2px); filter: brightness(0.96); }
+.btn-big { font-size: 22px; min-height: 56px; padding: 10px 40px; }
+.btn-wide { min-width: 180px; }
+
+/* Ana menü Oyna düğmesi */
+.btn-play {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  min-width: 260px;
+  min-height: 66px;
+  padding: 10px 44px 10px 36px;
+  border-radius: 22px;
+  font-size: 30px;
+}
+.ico-play { width: 30px; height: 30px; color: var(--cream); filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.3)); }
+
+/* Nasıl Oynanır? düğmesi (Oyna'nın altında, ikincil) */
+.btn-info {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 46px;
+  padding: 8px 20px;
+  font-size: 17px;
+}
+.btn-info svg { width: 22px; height: 22px; }
 
 /* ---------- Oyun alanı ---------- */
 .stage {
   flex: 1 1 auto;
   position: relative;
   min-height: 0;
+  /* Aşama 1 ile aynı boşluklar: taş boyutları değişmesin */
   margin: 6px calc(6px + var(--safe-r)) calc(6px + var(--safe-b)) calc(6px + var(--safe-l));
   touch-action: manipulation;
+  z-index: 1;
 }
 .board {
   position: absolute;
-  /* Taşların z-index'leri yalnızca masanın içinde geçerli olsun;
-     pencereler (overlay) her zaman taşların üstünde kalsın. */
+  /* Taşların z-index'leri yalnızca masanın içinde geçerli; pencereler hep üstte kalır */
   isolation: isolate;
   z-index: 0;
 }
 
-/* ---------- Taşlar ---------- */
-.tile {
+/* ---------- Taşlar: fildişi/seramik ----------
+   Işık sol üstten gelir (masa fotoğrafındaki gibi): pah üst-solda açık, alt-sağda koyu;
+   kalınlık (önce fildişi, sonra yeşil taban) ve gölge alt-sağa düşer. */
+.tile, .deco-tile {
   position: absolute;
   width: var(--w);
   height: var(--h);
-  border-radius: calc(var(--w) * 0.14);
-  background: linear-gradient(145deg, #fffdf4 0%, var(--cream) 45%, var(--cream-2) 100%);
-  /* 3B kenar: krem kalınlık + yeşil taban (marka ikonundaki gibi) + gölge */
+  border-radius: calc(var(--w) * 0.16);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0) 22%),
+    radial-gradient(120% 90% at 25% 12%, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0) 55%),
+    linear-gradient(160deg, #fffcf3 0%, #fbf1dc 50%, #efe0bd 100%);
   box-shadow:
-    inset 0 0 0 1px rgba(120, 95, 50, 0.35),
-    calc(var(--s) * 0.5) calc(var(--s) * 0.5) 0 #e2cf9f,
-    var(--s) var(--s) 0 var(--green),
-    calc(var(--s) + 1px) calc(var(--s) + 1px) 0 var(--green-dark),
-    calc(var(--s) + 2px) calc(var(--s) + 3px) calc(var(--s) * 1.5) rgba(0, 0, 0, 0.45);
+    inset 1.5px 1.5px 0 rgba(255, 255, 255, 0.95),
+    inset -1.5px -1.5px 0 rgba(160, 120, 65, 0.3),
+    inset 0 0 0 1px rgba(120, 88, 40, 0.22),
+    calc(var(--s) * 0.3) calc(var(--s) * 0.3) 0 #f1e3c1,
+    calc(var(--s) * 0.55) calc(var(--s) * 0.55) 0 #dcc796,
+    calc(var(--s) * 0.78) calc(var(--s) * 0.78) 0 var(--tile-green),
+    var(--s) var(--s) 0 #106a48,
+    calc(var(--s) + 1px) calc(var(--s) + 1px) 0 var(--tile-green-dark),
+    calc(var(--s) + 3px) calc(var(--s) + 5px) calc(var(--s) * 2) rgba(22, 9, 3, 0.55);
+}
+.tile {
   cursor: pointer;
   touch-action: manipulation;
-  transition: transform 0.12s ease, opacity 0.25s ease;
+  transition: transform 0.14s ease, opacity 0.25s ease;
   outline: none;
 }
-.tile .face {
+.tile .face, .deco-tile .face {
   position: absolute;
   inset: 4%;
   pointer-events: none;
 }
-.tile .face svg { width: 100%; height: 100%; display: block; }
+.tile .face svg, .deco-tile .face svg { width: 100%; height: 100%; display: block; }
 
-/* Seçili taş: altın çerçeve + hafif yükselme */
-.tile.selected {
-  background: linear-gradient(145deg, #fff9d6 0%, #ffe9a0 100%);
+/* Seçili taş: sade ama belirgin altın çerçeve + hafif yükselme */
+.tile::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
   box-shadow:
-    inset 0 0 0 calc(var(--w) * 0.07) var(--gold-dark),
-    calc(var(--s) * 0.5) calc(var(--s) * 0.5) 0 #e2cf9f,
-    var(--s) var(--s) 0 var(--green),
-    0 0 0 3px #fff2b0,
-    0 0 14px 4px rgba(255, 210, 80, 0.9);
-  transform: translate(calc(var(--s) * -0.5), calc(var(--s) * -0.5));
+    inset 0 0 0 calc(var(--w) * 0.07) #e0b23a,
+    inset 0 0 0 calc(var(--w) * 0.1) rgba(255, 232, 160, 0.75),
+    0 0 0 2px rgba(255, 236, 170, 0.9),
+    0 0 12px 3px rgba(255, 196, 70, 0.7);
+  transition: opacity 0.12s ease;
 }
-.tile:focus-visible { box-shadow: 0 0 0 3px #fff, 0 0 0 6px var(--gold-dark); }
+.tile.selected {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0) 22%),
+    radial-gradient(120% 90% at 25% 12%, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0) 55%),
+    linear-gradient(160deg, #fffbe6 0%, #fff0c2 55%, #f6df9c 100%);
+  transform: translate(calc(var(--s) * -0.5), calc(var(--s) * -0.5));
+  animation: pop 0.22s ease-out;
+}
+.tile.selected::after { opacity: 1; }
+@keyframes pop {
+  0% { transform: translate(0, 0) scale(1); }
+  55% { transform: translate(calc(var(--s) * -0.6), calc(var(--s) * -0.6)) scale(1.07); }
+  100% { transform: translate(calc(var(--s) * -0.5), calc(var(--s) * -0.5)) scale(1); }
+}
+.tile:focus-visible::after { opacity: 1; }
 
-/* Eşleşip kaldırılan taş */
+/* Eşleşip kaldırılan taş: yukarı süzülüp yumuşakça kaybolur */
 .tile.gone {
   opacity: 0;
-  transform: scale(0.6);
+  transform: translateY(calc(var(--h) * -0.22)) scale(0.82);
   pointer-events: none;
   visibility: hidden;
-  transition: transform 0.25s ease, opacity 0.25s ease, visibility 0s linear 0.25s;
+  animation: none;
+  transition: transform 0.32s cubic-bezier(0.2, 0.7, 0.3, 1), opacity 0.3s ease, visibility 0s linear 0.32s;
+}
+
+/* Eşleşme anında kısa, yumuşak altın halka (yalnızca transform/opacity) */
+.spark {
+  position: absolute;
+  width: var(--w);
+  height: var(--h);
+  border-radius: calc(var(--w) * 0.18);
+  pointer-events: none;
+  box-shadow: 0 0 0 2px rgba(255, 228, 150, 0.9), 0 0 16px 3px rgba(255, 200, 90, 0.6);
+  animation: spark 0.45s ease-out forwards;
+  z-index: 99999;
+}
+@keyframes spark {
+  0% { opacity: 0.95; transform: scale(0.92); }
+  100% { opacity: 0; transform: scale(1.35); }
 }
 
 /* Kapalı taşa dokunma: küçük sallanma */
@@ -166,7 +313,7 @@ body {
 .rotate-hint {
   position: fixed;
   left: 50%;
-  bottom: calc(10px + var(--safe-b));
+  bottom: calc(12px + var(--safe-b));
   transform: translateX(-50%);
   width: max-content;
   max-width: calc(100vw - 24px);
@@ -175,7 +322,8 @@ body {
   font-size: 14px;
   font-weight: 600;
   text-align: center;
-  background: rgba(0, 0, 0, 0.55);
+  background: rgba(30, 16, 8, 0.82);
+  box-shadow: inset 0 0 0 1px rgba(255, 220, 170, 0.18);
   pointer-events: none;
   z-index: 20;
 }
@@ -188,44 +336,177 @@ body {
   align-items: center;
   justify-content: center;
   padding: calc(16px + var(--safe-t)) calc(16px + var(--safe-r)) calc(16px + var(--safe-b)) calc(16px + var(--safe-l));
-  background: rgba(20, 5, 5, 0.6);
+  background: rgba(18, 8, 3, 0.6);
   z-index: 100;
+  animation: fade-in 0.2s ease;
 }
 .overlay[hidden] { display: none; }
+/* Açık krem, hafif üç boyutlu panel (altın çerçeve yok) */
 .panel {
+  position: relative;
+  z-index: 2;
   width: min(420px, 100%);
   max-height: 100%;
   overflow: auto;
   text-align: center;
-  padding: 22px 20px;
-  border-radius: 20px;
+  padding: 22px;
+  border-radius: 24px;
   color: var(--ink);
-  background: linear-gradient(180deg, #fffaf0 0%, var(--cream-2) 100%);
-  box-shadow: 0 0 0 4px var(--gold), 0 12px 40px rgba(0, 0, 0, 0.5);
+  background:
+    radial-gradient(120% 70% at 30% 0%, #fffdf7 0%, rgba(255, 253, 247, 0) 70%),
+    linear-gradient(180deg, var(--cream-light) 0%, var(--cream) 100%);
+  box-shadow:
+    inset 0 1px 0 #fff,
+    inset 0 -2px 0 rgba(160, 120, 70, 0.18),
+    0 6px 0 #cdb184,
+    0 7px 0 #a98d60,
+    0 22px 44px rgba(10, 4, 1, 0.55);
+  animation: panel-in 0.28s cubic-bezier(0.2, 0.8, 0.3, 1.15);
 }
-.panel h2 { margin: 0 0 8px; font-size: 24px; color: var(--red); }
-.panel h2.big { font-size: 32px; }
+.panel h2 { margin: 0 0 8px; font-family: var(--serif); font-size: 26px; color: var(--red); }
 .panel p { margin: 0 0 18px; font-size: 18px; line-height: 1.4; }
-.panel .row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.panel .row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+@keyframes fade-in { from { opacity: 0; } }
+@keyframes panel-in { from { opacity: 0; transform: translateY(12px) scale(0.94); } }
 
-.splash { background: radial-gradient(ellipse at 50% 30%, #c8141e 0%, #6d0a10 90%); }
-.splash .panel { background: none; box-shadow: none; color: var(--cream); }
-.splash-logo { width: min(260px, 55vmin); height: auto; border-radius: 22%; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45); }
-.splash .lead { margin: 18px 0 22px; font-size: 19px; }
+.panel-info { width: min(480px, 100%); text-align: left; }
+.panel-info h2 { text-align: center; }
+.rules { margin: 6px 0 18px; padding-left: 22px; font-size: 17px; line-height: 1.45; }
+.rules li { margin: 0 0 8px; }
+.panel-info .btn { display: block; margin: 0 auto; }
 
-/* Alçak (yatay telefon) ekranlarda üst çubuğu incelt */
+/* ---------- Ana menü ---------- */
+.splash { background: none; animation: none; padding: 0; }
+.splash .menu {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  padding: calc(12px + var(--safe-t)) 16px calc(12px + var(--safe-b));
+}
+/* Aşama 2.1: logo ile Oyna arasındaki boşluk azaltıldı (önceden 12–28 px);
+   Oyna ile Nasıl Oynanır? arasındaki boşluk aynı kaldı. */
+.splash .menu .splash-logo { margin-bottom: clamp(6px, 1.6vh, 14px); }
+.splash .menu .btn-info { margin-top: clamp(12px, 3.2vh, 28px); }
+.splash-logo {
+  width: min(300px, 56vmin, 44vh);
+  height: auto;
+  border-radius: 22%;
+  box-shadow: 0 16px 34px rgba(12, 4, 1, 0.6), 0 4px 10px rgba(0, 0, 0, 0.35);
+  animation: logo-in 0.6s cubic-bezier(0.2, 0.8, 0.3, 1.2);
+}
+@keyframes logo-in { from { opacity: 0; transform: scale(0.88); } }
+
+/* ---------- Kazanma ekranı ---------- */
+.victory { background: none; padding: 0; }
+.victory .panel-win {
+  --wt-w: clamp(44px, 10vmin, 70px);
+  --wt-h: calc(var(--wt-w) * 1.3);
+  width: min(440px, calc(100% - 32px));
+  margin-top: calc(var(--wt-h) * 0.5);
+  padding-top: calc(var(--wt-h) * 0.72 + 12px);
+  overflow: visible;
+}
+.win-tiles {
+  position: absolute;
+  left: 50%;
+  top: calc(var(--wt-h) * -0.6);
+  width: calc(var(--wt-w) * 3);
+  height: var(--wt-h);
+  transform: translateX(-50%);
+  --w: var(--wt-w);
+  --h: var(--wt-h);
+  --s: calc(var(--wt-w) * 0.11);
+}
+/* Aşama 2.1: yan taşlar ortadakinin altına biraz daha girer, daha az eğik ve daha alçak durur;
+   panelin üst kenarına oturur. Işık sol üstten: gölgeler sağ alta düşer. */
+.win-tiles .deco-tile { z-index: 1; }
+.win-tiles .w1 { left: calc(var(--w) * 0.22); top: calc(var(--h) * 0.13); transform: rotate(-7deg); }
+.win-tiles .w2 { left: calc(var(--w) * 1); top: 0; z-index: 3; }
+.win-tiles .w3 { left: calc(var(--w) * 1.78); top: calc(var(--h) * 0.13); transform: rotate(7deg); }
+/* Ortadaki taşın yan taşların üzerine düşen yumuşak gölgesi */
+.win-tiles .w2 {
+  box-shadow:
+    inset 1.5px 1.5px 0 rgba(255, 255, 255, 0.95),
+    inset -1.5px -1.5px 0 rgba(160, 120, 65, 0.3),
+    inset 0 0 0 1px rgba(120, 88, 40, 0.22),
+    calc(var(--s) * 0.3) calc(var(--s) * 0.3) 0 #f1e3c1,
+    calc(var(--s) * 0.55) calc(var(--s) * 0.55) 0 #dcc796,
+    calc(var(--s) * 0.78) calc(var(--s) * 0.78) 0 var(--tile-green),
+    var(--s) var(--s) 0 #106a48,
+    calc(var(--s) + 1px) calc(var(--s) + 1px) 0 var(--tile-green-dark),
+    calc(var(--s) + 4px) calc(var(--s) + 3px) calc(var(--s) * 1.6) rgba(40, 18, 5, 0.38),
+    -2px calc(var(--s) + 2px) calc(var(--s) * 1.4) rgba(40, 18, 5, 0.22);
+}
+/* Panele temas gölgesi: taşların oturduğu yerde yumuşak, sağa kaymış bir gölge */
+.win-tiles::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  left: 8%;
+  width: 92%;
+  bottom: calc(var(--h) * -0.22);
+  height: calc(var(--h) * 0.34);
+  border-radius: 50%;
+  background: radial-gradient(ellipse 50% 50% at 54% 45%, rgba(70, 35, 10, 0.32) 0%, rgba(70, 35, 10, 0.14) 55%, rgba(70, 35, 10, 0) 100%);
+  filter: blur(2px);
+}
+.win-title { font-family: var(--serif); font-size: 46px; line-height: 1.05; margin: 6px 0 8px; color: var(--red); }
+.panel-win p { font-size: 19px; color: var(--ink); }
+.panel-win .btn-big { min-width: 240px; }
+
+/* ---------- Konfeti (hafif altın) ---------- */
+.confetti {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 1;
+}
+.confetti i {
+  position: absolute;
+  top: -20px;
+  width: 8px;
+  height: 12px;
+  border-radius: 2px;
+  opacity: 0;
+  animation: fall var(--dur, 2.4s) cubic-bezier(0.25, 0.6, 0.4, 1) var(--delay, 0s) forwards;
+}
+@keyframes fall {
+  0% { opacity: 0.95; transform: translate3d(0, 0, 0) rotate(0deg); }
+  85% { opacity: 0.95; }
+  100% { opacity: 0; transform: translate3d(var(--dx, 0px), 105vh, 0) rotate(var(--rot, 540deg)); }
+}
+
+/* ---------- Alçak (yatay telefon) ekranlar ---------- */
 @media (max-height: 480px) {
   .topbar { padding-top: calc(3px + var(--safe-t)); padding-bottom: 3px; }
-  .brand { width: 32px; height: 32px; }
+  .brand { width: 38px; height: 38px; margin-bottom: -6px; border-radius: 9px; }
+  .stat { min-width: 76px; padding: 2px 10px 3px; }
   .stat-value { font-size: 18px; }
   .stat-label { font-size: 11px; }
   .btn { min-height: 38px; font-size: 15px; padding: 6px 12px; }
-  .splash-logo { width: min(160px, 40vmin); }
-  .splash .lead { margin: 10px 0 12px; font-size: 16px; }
-  .btn-big { min-height: 48px; font-size: 19px; }
+  .btn-big { min-height: 50px; font-size: 20px; }
+  .btn-play { min-height: 56px; font-size: 26px; min-width: 240px; }
+  .ico-play { width: 26px; height: 26px; }
+  .btn-info { min-height: 40px; font-size: 15px; }
+  .splash-logo { width: min(300px, 40vh); }
+  .panel { padding: 14px 18px; }
+  .panel h2 { font-size: 22px; }
+  .panel p { margin-bottom: 12px; font-size: 16px; }
+  .rules { font-size: 15px; margin-bottom: 12px; }
+  .rules li { margin-bottom: 4px; }
+  .win-title { font-size: 34px; margin: 2px 0 4px; }
+  .victory .panel-win { --wt-w: clamp(38px, 10vmin, 52px); }
 }
 
+/* ---------- Hareket azaltma tercihi ---------- */
 @media (prefers-reduced-motion: reduce) {
-  .tile, .tile.gone { transition: none; }
-  .tile.shake, .tile.wrong { animation: none; }
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  .confetti { display: none; }
 }

@@ -16,12 +16,21 @@ Telefon, tablet ve tarayıcıda çalışır; ana ekrana eklenebilir (PWA) ve int
 
 ## Durum
 
-**Aşama 1 — Temel oyun** (geliştirme aşamasında)
+**Aşama 1 — Temel oyun** (tamamlandı, yayında)
 
 - Klasik 144 taşlık Kaplumbağa dizilimi
 - Standart taş dağılımı (bambu, daire, karakter, rüzgâr, ejderha, çiçek, mevsim)
 - Her dağıtım **çözülebilir**: üretici bir çözüm yolu bulur ve bu yolu oyun kurallarıyla baştan oynatarak doğrular
 - Yeni Oyun, Kalan Taş, Kullanılabilir Eşleşme sayısı, Kazanma ekranı, Hamle Kalmadı uyarısı
+
+**Aşama 2 — Görsel kalite: Koyu Ceviz Masa** (önizlemede, onay bekliyor)
+
+- Gerçekçi ceviz masa arka planları (ana menü, oyun, kazanma) — `assets/bg/`
+- Fildişi/seramik taşlar, yeşil taban, sol üstten gelen ışıkla tutarlı gölgeler
+- Ana menü: MAHJIQ logosu, kırmızı Oyna düğmesi, "Nasıl Oynanır?" penceresi
+- Kazanma ekranı: krem panel, üç taş, Tebrikler!, kırmızı Yeni Oyun
+- Seçim, eşleşme ve kazanma animasyonları; "Hareketi Azalt" ayarına uyum
+- Taş boyutları ve dokunma alanları Aşama 1 ile birebir aynı (testle korunuyor)
 
 ## Proje yapısı
 
@@ -41,6 +50,7 @@ src/ui/                 Arayüz
   faces.js              Taş yüzleri (özgün SVG çizimler)
 assets/brand/original/  Orijinal marka görselleri (değiştirilmez)
 assets/icons/           Uygulama ikonları (orijinalden boyutlandırılmış)
+assets/bg/              Masa arka planları (WebP); original/ içinde kaynak PNG'ler
 tools/make_icons.py     İkonları orijinalden yeniden üretir
 manifest.webmanifest    PWA bilgileri
 sw.js                   Çevrimdışı çalışma

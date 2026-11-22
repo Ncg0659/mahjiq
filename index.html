@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
   <title>MAHJIQ</title>
   <meta name="description" content="MAHJIQ — ücretsiz, reklamsız Mahjong Solitaire." />
-  <meta name="theme-color" content="#a3101a" />
+  <meta name="theme-color" content="#2a1b12" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -17,25 +17,53 @@
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
+  <!-- Oyun masası arka planı (ceviz) -->
+  <div class="bg bg-game" aria-hidden="true"></div>
+
   <header class="topbar">
-    <img class="brand" src="assets/brand/mahjiq-logo-160.png" alt="MAHJIQ" width="40" height="40" />
+    <img class="brand" src="assets/brand/mahjiq-logo-160.png" alt="MAHJIQ" width="42" height="42" />
     <div class="stats" aria-live="polite">
       <div class="stat"><span class="stat-label">Kalan Taş</span><span id="stat-remaining" class="stat-value">144</span></div>
       <div class="stat"><span class="stat-label">Eşleşme</span><span id="stat-matches" class="stat-value">0</span></div>
     </div>
-    <button id="btn-new" class="btn btn-gold" type="button">Yeni Oyun</button>
+    <button id="btn-new" class="btn btn-cream btn-icon-text" type="button">
+      <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><path d="M20 3.5v5h-5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span>Yeni Oyun</span>
+    </button>
   </header>
 
   <main id="stage" class="stage"></main>
 
   <div id="rotate-hint" class="rotate-hint" hidden>Taşlar daha büyük görünsün diye telefonu yan çevirebilirsin ↻</div>
 
-  <!-- Açılış ekranı -->
-  <section id="splash" class="overlay splash" role="dialog" aria-label="MAHJIQ açılış">
-    <div class="panel">
-      <img class="splash-logo" src="assets/brand/mahjiq-logo-600.webp" alt="MAHJIQ" width="260" height="260" />
-      <p class="lead">Aynı iki taşı bul, dokun, kaldır.<br />Bütün taşları kaldırınca kazanırsın.</p>
-      <button id="btn-play" class="btn btn-gold btn-big" type="button">Oyna</button>
+  <!-- Ana menü -->
+  <section id="splash" class="overlay splash" role="dialog" aria-label="MAHJIQ ana menü">
+    <div class="bg bg-menu" aria-hidden="true"></div>
+    <div class="menu">
+      <img class="splash-logo" src="assets/brand/mahjiq-logo-600.webp" alt="MAHJIQ" width="300" height="300" />
+      <button id="btn-play" class="btn btn-red btn-play" type="button">
+        <svg class="ico-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l13-7.5z" fill="currentColor"/></svg>
+        <span>Oyna</span>
+      </button>
+      <button id="btn-info" class="btn btn-cream btn-info" type="button">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M12 10.5v6.5" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><circle cx="12" cy="7" r="1.6" fill="currentColor"/></svg>
+        <span>Nasıl Oynanır?</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- Nasıl oynanır -->
+  <section id="info" class="overlay" role="dialog" aria-label="Nasıl Oynanır?" hidden>
+    <div class="panel panel-info">
+      <h2>Nasıl Oynanır?</h2>
+      <ul class="rules">
+        <li>Aynı iki taşa dokun, ikisi de masadan kalkar.</li>
+        <li>Bir taş, <strong>üstünde taş yoksa</strong> ve <strong>sağ ya da sol yanı boşsa</strong> seçilebilir.</li>
+        <li>Çiçek taşları kendi aralarında, mevsim taşları kendi aralarında eşleşir.</li>
+        <li>Bütün taşları kaldırınca kazanırsın.</li>
+        <li>Taşın sol üst köşesindeki küçük işaret, taşı tanımanı kolaylaştırır (rüzgârlarda D/G/B/K = Doğu/Güney/Batı/Kuzey).</li>
+      </ul>
+      <button id="info-close" class="btn btn-red btn-wide" type="button">Tamam</button>
     </div>
   </section>
 
@@ -45,18 +73,23 @@
       <h2>Yeni oyun başlasın mı?</h2>
       <p>Bu oyun silinecek.</p>
       <div class="row">
-        <button id="confirm-no" class="btn btn-light" type="button">Vazgeç</button>
-        <button id="confirm-yes" class="btn btn-gold" type="button">Evet, Yeni Oyun</button>
+        <button id="confirm-no" class="btn btn-cream" type="button">Vazgeç</button>
+        <button id="confirm-yes" class="btn btn-red" type="button">Evet, Yeni Oyun</button>
       </div>
     </div>
   </section>
 
   <!-- Kazanma -->
-  <section id="win" class="overlay" role="dialog" aria-label="Kazandın" hidden>
-    <div class="panel">
-      <h2 class="big">Tebrikler! 🎉</h2>
+  <section id="win" class="overlay victory" role="dialog" aria-label="Kazandın" hidden>
+    <div class="bg bg-victory" aria-hidden="true"></div>
+    <div class="panel panel-win">
+      <div class="win-tiles" aria-hidden="true"></div>
+      <h2 class="win-title">Tebrikler!</h2>
       <p>Bütün taşları kaldırdın.</p>
-      <button id="win-new" class="btn btn-gold btn-big" type="button">Yeni Oyun</button>
+      <button id="win-new" class="btn btn-red btn-big btn-icon-text" type="button">
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><path d="M20 3.5v5h-5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>Yeni Oyun</span>
+      </button>
     </div>
   </section>
 
@@ -66,8 +99,8 @@
       <h2>Hamle kalmadı</h2>
       <p>Masada eşleştirilebilecek taş kalmadı.<br />Kalan taş: <strong id="stuck-left">0</strong></p>
       <div class="row">
-        <button id="stuck-look" class="btn btn-light" type="button">Masaya Bak</button>
-        <button id="stuck-new" class="btn btn-gold" type="button">Yeni Oyun</button>
+        <button id="stuck-look" class="btn btn-cream" type="button">Masaya Bak</button>
+        <button id="stuck-new" class="btn btn-red" type="button">Yeni Oyun</button>
       </div>
     </div>
   </section>

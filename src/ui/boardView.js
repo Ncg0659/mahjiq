@@ -114,6 +114,7 @@ export class BoardView {
       case 'match':
         for (const id of ev.ids) {
           const el = this.els[id];
+          this.spark(el);
           el.classList.remove('selected');
           el.classList.add('gone');
         }
@@ -121,6 +122,17 @@ export class BoardView {
       default:
         break;
     }
+  }
+
+  /** Eşleşen taşın yerinde kısa bir altın halka (yalnızca görsel; dokunmayı engellemez). */
+  spark(el) {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const s = document.createElement('div');
+    s.className = 'spark';
+    s.style.left = el.style.left;
+    s.style.top = el.style.top;
+    this.board.appendChild(s);
+    setTimeout(() => s.remove(), 500);
   }
 
   flash(el, cls) {

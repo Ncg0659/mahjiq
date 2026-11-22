@@ -2,6 +2,7 @@
 
 import { Game, STATUS } from './engine/game.js';
 import { BoardView } from './ui/boardView.js';
+import { faceSVG } from './ui/faces.js';
 
 const $ = (sel) => document.querySelector(sel);
 
@@ -17,7 +18,17 @@ const ui = {
   stuck: $('#stuck'),
   stuckLeft: $('#stuck-left'),
   rotateHint: $('#rotate-hint'),
+  info: $('#info'),
 };
+
+/** Süs taşı: oyunun kendi taş çizimiyle (dokunulmaz, ekran okuyucu görmez). */
+function decoTile(kind, value, cls = '') {
+  return `<div class="deco-tile ${cls}"><div class="face">${faceSVG({ kind, value })}</div></div>`;
+}
+
+// Kazanma panelinin üstündeki üç taş
+document.querySelector('.win-tiles').innerHTML =
+  decoTile('dots', 5, 'w1') + decoTile('dragon', 'green', 'w2') + decoTile('bamboo', 2, 'w3');
 
 function show(el) {
   el.hidden = false;
@@ -28,14 +39,57 @@ function hide(el) {
   el.hidden = true;
 }
 
-function updateStats() {
-  ui.remaining.textContent = String(game.remaining);
-  ui.matches.textContent = String(game.matchesAvailable);
+function setStat(el, value, animate) {
+  const text = String(value);
+  if (el.textContent === text) return;
+  el.textContent = text;
+  if (animate) {
+    el.classList.remove('bump');
+    void el.offsetWidth; // animasyonu yeniden başlat
+    el.classList.add('bump');
+  }
+}
+
+function updateStats(animate = false) {
+  setStat(ui.remaining, game.remaining, animate);
+  setStat(ui.matches, game.matchesAvailable, animate);
+}
+
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+/** Kazanınca sade konfeti kutlaması (yalnızca transform/opacity; hareket azaltmada yok). */
+function celebrate() {
+  if (reduceMotion.matches) return;
+  // Yalnızca hafif altın tonları (brief: sade altın konfeti)
+  const colors = ['#d4af37', '#f2d57a', '#b8892a', '#fbe7a8'];
+  const box = document.createElement('div');
+  box.className = 'confetti';
+  box.setAttribute('aria-hidden', 'true');
+  let html = '';
+  for (let i = 0; i < 30; i++) {
+    const left = Math.random() * 100;
+    const dx = (Math.random() - 0.5) * 160;
+    const rot = 360 + Math.random() * 540;
+    const dur = 1.9 + Math.random() * 1.2;
+    const delay = Math.random() * 0.6;
+    const c = colors[i % colors.length];
+    html += `<i style="left:${left.toFixed(1)}%;background:${c};--dx:${dx.toFixed(0)}px;--rot:${rot.toFixed(0)}deg;--dur:${dur.toFixed(2)}s;--delay:${delay.toFixed(2)}s"></i>`;
+  }
+  box.innerHTML = html;
+  // Pencerenin içine, panelin ARKASINA eklenir: yazı ve düğme hep okunur kalır.
+  ui.win.prepend(box);
+  setTimeout(() => box.remove(), 3600);
 }
 
 game.onChange((ev) => {
-  if (ev.type === 'new' || ev.type === 'match') updateStats();
-  if (ev.type === 'match' && ev.status === STATUS.WON) setTimeout(() => show(ui.win), 350);
+  if (ev.type === 'new') updateStats(false);
+  if (ev.type === 'match') updateStats(true);
+  if (ev.type === 'match' && ev.status === STATUS.WON) {
+    setTimeout(() => {
+      show(ui.win);
+      celebrate();
+    }, 350);
+  }
   if (ev.type === 'match' && ev.status === STATUS.STUCK) {
     ui.stuckLeft.textContent = String(game.remaining);
     setTimeout(() => show(ui.stuck), 350);
@@ -60,6 +114,11 @@ $('#confirm-no').addEventListener('click', () => hide(ui.confirm));
 $('#win-new').addEventListener('click', startNewGame);
 $('#stuck-new').addEventListener('click', startNewGame);
 $('#stuck-look').addEventListener('click', () => hide(ui.stuck));
+$('#btn-info').addEventListener('click', () => show(ui.info));
+$('#info-close').addEventListener('click', () => {
+  hide(ui.info);
+  $('#btn-info').focus({ preventScroll: true });
+});
 
 // Küçük dikey ekranda "yan çevir" önerisi
 $('#stage').addEventListener('board-layout', (e) => {
