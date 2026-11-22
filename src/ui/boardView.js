@@ -21,6 +21,9 @@ export class BoardView {
     stage.appendChild(this.board);
     this.els = [];
     this.tileW = 0;
+    this.hintRings = [];
+    this.hintTimer = null;
+    this.hintPair = null;
 
     // Dokunmatik ve fare için tek olay: pointerdown → gecikmesiz tepki.
     this.board.addEventListener('pointerdown', (e) => {
@@ -64,6 +67,7 @@ export class BoardView {
   }
 
   layout() {
+    this.clearHint(); // ekran boyutu değişirse vurgu yeniden konumlanmak yerine kaldırılır
     const W = this.stage.clientWidth;
     const H = this.stage.clientHeight;
     if (!W || !H) return;
@@ -93,6 +97,8 @@ export class BoardView {
   }
 
   onEvent(ev) {
+    // Oyuncu herhangi bir taşa dokunursa (ya da yeni oyun başlarsa) ipucu vurgusu temizlenir
+    if (ev.type !== 'ignored') this.clearHint();
     switch (ev.type) {
       case 'new':
         this.build();
@@ -122,6 +128,37 @@ export class BoardView {
       default:
         break;
     }
+  }
+
+  /**
+   * İpucu: iki taşın üstüne ~2 sn altın çerçeve. Taşları taşımaz/büyütmez; oyunu değiştirmez.
+   * Hareketi Azalt açıksa çerçeve yanıp sönmez, sabit durur (yine ~2 sn sonra kalkar).
+   */
+  showHint(pair, duration = 2000) {
+    this.clearHint();
+    this.hintPair = [...pair];
+    for (const id of pair) {
+      const el = this.els[id];
+      if (!el) continue;
+      el.classList.add('hinted');
+      const ring = document.createElement('div');
+      ring.className = 'hint-ring';
+      ring.dataset.for = String(id);
+      ring.style.left = el.style.left;
+      ring.style.top = el.style.top;
+      this.board.appendChild(ring);
+      this.hintRings.push(ring);
+    }
+    this.hintTimer = setTimeout(() => this.clearHint(), duration);
+  }
+
+  clearHint() {
+    if (this.hintTimer) clearTimeout(this.hintTimer);
+    this.hintTimer = null;
+    for (const r of this.hintRings) r.remove();
+    this.hintRings = [];
+    if (this.hintPair) for (const id of this.hintPair) this.els[id]?.classList.remove('hinted');
+    this.hintPair = null;
   }
 
   /** Eşleşen taşın yerinde kısa bir altın halka (yalnızca görsel; dokunmayı engellemez). */

@@ -23,7 +23,7 @@ Telefon, tablet ve tarayıcıda çalışır; ana ekrana eklenebilir (PWA) ve int
 - Her dağıtım **çözülebilir**: üretici bir çözüm yolu bulur ve bu yolu oyun kurallarıyla baştan oynatarak doğrular
 - Yeni Oyun, Kalan Taş, Kullanılabilir Eşleşme sayısı, Kazanma ekranı, Hamle Kalmadı uyarısı
 
-**Aşama 2 — Görsel kalite: Koyu Ceviz Masa** (önizlemede, onay bekliyor)
+**Aşama 2 — Görsel kalite: Koyu Ceviz Masa** (tamamlandı, yayında)
 
 - Gerçekçi ceviz masa arka planları (ana menü, oyun, kazanma) — `assets/bg/`
 - Fildişi/seramik taşlar, yeşil taban, sol üstten gelen ışıkla tutarlı gölgeler
@@ -31,6 +31,13 @@ Telefon, tablet ve tarayıcıda çalışır; ana ekrana eklenebilir (PWA) ve int
 - Kazanma ekranı: krem panel, üç taş, Tebrikler!, kırmızı Yeni Oyun
 - Seçim, eşleşme ve kazanma animasyonları; "Hareketi Azalt" ayarına uyum
 - Taş boyutları ve dokunma alanları Aşama 1 ile birebir aynı (testle korunuyor)
+
+**Aşama 3.1 — İpucu** (önizlemede, onay bekliyor)
+
+- Üst çubukta İpucu düğmesi: eşleşebilecek iki serbest taş ~2 saniye altın çerçeveyle gösterilir
+- İpucu oyunu değiştirmez (taş kaldırmaz, sayaçlara dokunmaz); sınırsız ve ücretsiz
+- Algoritma oyunun sonuna kadar bir çözüm yolu arar; bulursa ilk hamlesini gösterir (çözüm garantili),
+  bulamazsa geçerli bir çift gösterir ama garanti iddia etmez — ayrıntı: `src/engine/hint.js`
 
 ## Proje yapısı
 
@@ -43,6 +50,7 @@ src/engine/             Oyun motoru — DOM'dan bağımsız, saf JavaScript
   layouts/turtle.js     Kaplumbağa dizilimi (koordinat + katman)
   board.js              Serbestlik ve eşleşme hesapları
   generator.js          Çözülebilir dağıtım üretici + doğrulayıcı
+  hint.js               İpucu: geçerli çift + sınırlı çözüm araması
   game.js               Merkezi oyun durumu
   rng.js                Tohumlu rastgele sayı üreteci
 src/ui/                 Arayüz

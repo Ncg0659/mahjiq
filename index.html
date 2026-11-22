@@ -26,13 +26,21 @@
       <div class="stat"><span class="stat-label">Kalan Taş</span><span id="stat-remaining" class="stat-value">144</span></div>
       <div class="stat"><span class="stat-label">Eşleşme</span><span id="stat-matches" class="stat-value">0</span></div>
     </div>
-    <button id="btn-new" class="btn btn-cream btn-icon-text" type="button">
-      <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><path d="M20 3.5v5h-5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      <span>Yeni Oyun</span>
-    </button>
+    <div class="actions">
+      <button id="btn-hint" class="btn btn-cream btn-icon-text" type="button">
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6M10 21h4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.7.5 1.1 1.3 1.1 2.2h5c0-.9.4-1.7 1.1-2.2A6 6 0 0 0 12 3z" fill="#f2c14e" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+        <span>İpucu</span>
+      </button>
+      <button id="btn-new" class="btn btn-cream btn-icon-text" type="button">
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><path d="M20 3.5v5h-5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>Yeni Oyun</span>
+      </button>
+    </div>
   </header>
 
   <main id="stage" class="stage"></main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 
   <div id="rotate-hint" class="rotate-hint" hidden>Taşlar daha büyük görünsün diye telefonu yan çevirebilirsin ↻</div>
 

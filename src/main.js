@@ -3,6 +3,7 @@
 import { Game, STATUS } from './engine/game.js';
 import { BoardView } from './ui/boardView.js';
 import { faceSVG } from './ui/faces.js';
+import { createHinter } from './engine/hint.js';
 
 const $ = (sel) => document.querySelector(sel);
 
@@ -19,7 +20,18 @@ const ui = {
   stuckLeft: $('#stuck-left'),
   rotateHint: $('#rotate-hint'),
   info: $('#info'),
+  toast: $('#toast'),
 };
+
+// İpucu: mantık engine/hint.js'te; burada yalnızca düğme ve gösterim.
+const hinter = createHinter();
+let toastTimer = null;
+function showToast(text) {
+  ui.toast.textContent = text;
+  ui.toast.hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { ui.toast.hidden = true; }, 2600);
+}
 
 /** Süs taşı: oyunun kendi taş çizimiyle (dokunulmaz, ekran okuyucu görmez). */
 function decoTile(kind, value, cls = '') {
@@ -82,7 +94,12 @@ function celebrate() {
 }
 
 game.onChange((ev) => {
-  if (ev.type === 'new') updateStats(false);
+  if (ev.type === 'new') {
+    // Yeni oyunda ipucu yardımcısı sıfırlanır; dağıtımın kendi çözüm yolu ilk rehber olur.
+    hinter.reset(game.solution, game.tiles.length);
+    ui.toast.hidden = true;
+    updateStats(false);
+  }
   if (ev.type === 'match') updateStats(true);
   if (ev.type === 'match' && ev.status === STATUS.WON) {
     setTimeout(() => {
@@ -115,6 +132,15 @@ $('#win-new').addEventListener('click', startNewGame);
 $('#stuck-new').addEventListener('click', startNewGame);
 $('#stuck-look').addEventListener('click', () => hide(ui.stuck));
 $('#btn-info').addEventListener('click', () => show(ui.info));
+$('#btn-hint').addEventListener('click', () => {
+  if (game.status === STATUS.WON) return; // oyun bitti: yeni hamle önerilmez
+  const h = hinter.hint(game.tiles, game.neighbors); // oyun durumunu değiştirmez
+  if (!h) {
+    showToast('Şu anda eşleştirilebilecek taş bulunmuyor.');
+    return;
+  }
+  view.showHint(h.pair);
+});
 $('#info-close').addEventListener('click', () => {
   hide(ui.info);
   $('#btn-info').focus({ preventScroll: true });
@@ -129,7 +155,7 @@ $('#stage').addEventListener('board-layout', (e) => {
 game.newGame();
 
 // Test ve hata ayıklama için (oyuncu görmez)
-window.__mahjiq = { game, view };
+window.__mahjiq = { game, view, hinter };
 
 // Çevrimdışı çalışma: service worker
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
