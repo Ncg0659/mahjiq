@@ -203,6 +203,7 @@ def run():
         run_stage2(browser)
         run_walnut(browser)
         run_stage21(browser)
+        run_hint(browser)
         browser.close()
 
     failed = [r for r in results if not r[1]]
@@ -444,6 +445,119 @@ def run_stage21(browser):
         check(f'{name}: kazanma ekranındaki Yeni Oyun düğmesi çalışıyor',
               pg.is_hidden('#win') and pg.evaluate('window.__mahjiq.game.remaining') == 144)
         c.close()
+
+
+def run_hint(browser):
+    """Aşama 3.1 — İpucu sistemi arayüz testleri."""
+    print('\nAşama 3.1 — İpucu')
+    ctx = browser.new_context(viewport={'width': 852, 'height': 393}, device_scale_factor=2, has_touch=True, is_mobile=True)
+    page = ctx.new_page()
+    errors = []
+    page.on('pageerror', lambda e: errors.append(str(e)))
+    page.goto(URL)
+    page.tap('#btn-play')
+    state = "() => { const g = window.__mahjiq.game; return JSON.stringify({ r: g.tiles.map(t => t.removed), s: g.selected, st: g.status, k: document.querySelector('#stat-remaining').textContent, m: document.querySelector('#stat-matches').textContent }); }"
+    rings = """() => { const { game } = window.__mahjiq;
+        const ids = [...document.querySelectorAll('.hint-ring')].map(r => +r.dataset.for);
+        return { ids, free: ids.every(i => game.isFree(i)), same: ids.length === 2 && game.tiles[ids[0]].face.matchKey === game.tiles[ids[1]].face.matchKey,
+                 anim: ids.length ? getComputedStyle(document.querySelector('.hint-ring')).animationName : null }; }"""
+    before = page.evaluate(state)
+    page.tap('#btn-hint')
+    r = page.evaluate(rings)
+    check('İpucu 1-3: yeni oyunda İpucu iki taşı vurguluyor; ikisi de serbest ve aynı türden', len(r['ids']) == 2 and r['free'] and r['same'], str(r))
+    check('İpucu: vurgu yumuşak parlama animasyonuyla gösteriliyor, taşlar yerinden oynamıyor',
+          r['anim'] == 'hint-pulse' and page.evaluate("""() => [...document.querySelectorAll('.hint-ring')].every(g => {
+              const t = document.querySelector(`.tile[data-id="${g.dataset.for}"]`);
+              return g.style.left === t.style.left && g.style.top === t.style.top && getComputedStyle(t).transform === 'none'; })"""))
+    check('İpucu 5-6: ipucu taş sayısını, sayaçları, seçimi ve oyun durumunu değiştirmiyor', page.evaluate(state) == before)
+    page.tap('#btn-hint')
+    r2 = page.evaluate(rings)
+    check('İpucu 7: aynı durumda tekrar basınca aynı çift', sorted(r2['ids']) == sorted(r['ids']), f"{r['ids']} / {r2['ids']}")
+    page.wait_for_timeout(2300)
+    check('İpucu 9: yaklaşık 2 saniye sonra vurgu kendiliğinden kalkıyor',
+          page.evaluate("document.querySelectorAll('.hint-ring, .tile.hinted').length") == 0)
+    # Seçim yapınca vurgu temizlenir
+    page.tap('#btn-hint')
+    a = free_tile_center(page)
+    page.touchscreen.tap(a['x'], a['y'])
+    check('İpucu 8: taş seçilince ipucu vurgusu hemen temizleniyor ve seçim normal çalışıyor',
+          page.evaluate("document.querySelectorAll('.hint-ring').length") == 0 and page.evaluate('window.__mahjiq.game.selected') == a['id'])
+    page.touchscreen.tap(a['x'], a['y'])  # seçimi kaldır
+    # İpucunu izleyerek oyunu bitir (dokunarak), sonra kazanma ve Yeni Oyun
+    for _ in range(80):
+        page.tap('#btn-hint')
+        ids = page.evaluate("[...document.querySelectorAll('.hint-ring')].map(r => +r.dataset.for)")
+        if len(ids) != 2:
+            break
+        for tid in ids:
+            c = tile_center(page, tid)
+            page.touchscreen.tap(c['x'], c['y'])
+    page.wait_for_selector('#win:not([hidden])', timeout=3000)
+    check('İpucu 16: yalnızca ipuçlarını izleyerek (dokunarak) oyun kazanılıyor, kazanma ekranı açılıyor',
+          page.evaluate('window.__mahjiq.game.remaining') == 0 and page.is_visible('#win'))
+    page.evaluate("document.querySelector('#btn-hint').click()")
+    check('İpucu 12: oyun bitince İpucu yeni hamle üretmiyor, mesaj da çıkmıyor',
+          page.evaluate("document.querySelectorAll('.hint-ring').length") == 0 and page.is_hidden('#toast'))
+    page.tap('#win-new')
+    page.wait_for_timeout(100)
+    page.tap('#btn-hint')
+    check('İpucu 16: kazanmadan sonra Yeni Oyun çalışıyor, yeni oyunda ipucu yine çalışıyor',
+          page.evaluate('window.__mahjiq.game.remaining') == 144 and page.evaluate("document.querySelectorAll('.hint-ring').length") == 2)
+    # Hamle yokken
+    page.evaluate("""() => { const g = window.__mahjiq.game; const F = (k, v) => ({ kind: k, value: v, matchKey: k + '-' + v, label: k + v });
+        g.loadTiles([{ col: 10, row: 6, z: 0, face: F('dots', 1) }, { col: 10, row: 6, z: 1, face: F('dots', 1) }]); }""")
+    page.tap('#btn-hint')
+    page.wait_for_timeout(100)
+    check('İpucu 11: hiç hamle yokken hata yok, Türkçe bilgi mesajı çıkıyor',
+          page.is_visible('#toast') and page.text_content('#toast') == 'Şu anda eşleştirilebilecek taş bulunmuyor.' and not errors, str(errors))
+    page.wait_for_timeout(2800)
+    check('İpucu 11: bilgi mesajı birkaç saniye sonra kendiliğinden kapanıyor', page.is_hidden('#toast'))
+    ctx.close()
+
+    # Hareketi Azalt
+    ctx = browser.new_context(viewport={'width': 852, 'height': 393}, device_scale_factor=2, has_touch=True, is_mobile=True, reduced_motion='reduce')
+    page = ctx.new_page()
+    page.goto(URL)
+    page.tap('#btn-play')
+    page.tap('#btn-hint')
+    r = page.evaluate("""() => { const g = document.querySelector('.hint-ring'); return { n: document.querySelectorAll('.hint-ring').length, anim: g && getComputedStyle(g).animationName, op: g && getComputedStyle(g).opacity }; }""")
+    check('İpucu 10: Hareketi Azalt açıkken vurgu animasyonsuz, sabit', r['n'] == 2 and r['anim'] == 'none' and r['op'] == '1', str(r))
+    page.wait_for_timeout(2300)
+    check('İpucu 10: Hareketi Azalt açıkken de vurgu ~2 sn sonra kalkıyor', page.evaluate("document.querySelectorAll('.hint-ring').length") == 0)
+    ctx.close()
+
+    # Yerleşim
+    for name, w, h in [('iPhone yatay', 852, 393), ('iPad yatay', 1180, 820), ('Android yatay', 915, 412), ('iPhone dikey', 393, 852), ('iPhone SE dikey', 375, 667)]:
+        c = browser.new_context(viewport={'width': w, 'height': h}, device_scale_factor=2, has_touch=True, is_mobile=True)
+        pg = c.new_page()
+        pg.goto(URL)
+        pg.tap('#btn-play')
+        m = pg.evaluate("""() => {
+            const els = ['.brand', '.stat:nth-child(1)', '.stat:nth-child(2)', '#btn-hint', '#btn-new'].map(s => document.querySelector(s).getBoundingClientRect());
+            const over = (a, b) => !(a.right <= b.left || b.right <= a.left || a.bottom <= b.top || b.bottom <= a.top);
+            let ov = false; for (let i = 0; i < els.length; i++) for (let j = i + 1; j < els.length; j++) if (over(els[i], els[j])) ov = true;
+            const hb = els[3], nb = els[4];
+            return { overlap: ov, inView: els.every(b => b.left >= 0 && b.right <= innerWidth && b.top >= 0),
+                     hint: [Math.round(hb.width), Math.round(hb.height)], newBtn: [Math.round(nb.width), Math.round(nb.height)],
+                     text: document.querySelector('#btn-hint').textContent.trim() }; }""")
+        minh = 38 if h <= 480 else 44
+        check(f'İpucu 13-14: {name} — İpucu, Yeni Oyun, sayaçlar ve logo çakışmıyor, hepsi ekranda',
+              not m['overlap'] and m['inView'] and m['hint'][1] >= minh and m['newBtn'][1] >= minh and m['text'] == 'İpucu', str(m))
+        c.close()
+
+    # Çevrimdışı
+    ctx = browser.new_context(viewport={'width': 852, 'height': 393}, device_scale_factor=2, has_touch=True, is_mobile=True)
+    page = ctx.new_page()
+    page.goto(URL)
+    page.evaluate("async () => { await navigator.serviceWorker.ready; await new Promise(r => setTimeout(r, 800)); }")
+    inCache = page.evaluate("async () => { const k = await caches.keys(); const c = await caches.open(k[0]); return !!(await c.match(new URL('src/engine/hint.js', location.href))); }")
+    ctx.set_offline(True)
+    page.reload()
+    page.tap('#btn-play')
+    page.tap('#btn-hint')
+    check('İpucu 15: internet yokken (service worker önbelleğinden) İpucu çalışıyor',
+          inCache and page.evaluate("document.querySelectorAll('.hint-ring').length") == 2)
+    ctx.close()
 
 
 if __name__ == '__main__':
